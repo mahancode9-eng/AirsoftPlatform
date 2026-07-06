@@ -5,12 +5,14 @@ from datetime import datetime
 from sqlalchemy import (
     JSON,
     Boolean,
+    Column,
     DateTime,
     Enum,
     Float,
     ForeignKey,
     Integer,
     String,
+    Table,
     Text,
     UniqueConstraint,
 )
@@ -357,3 +359,104 @@ class Setting(Base):
 
     key: Mapped[str] = mapped_column(String(100), primary_key=True)
     value: Mapped[str] = mapped_column(Text, default="")
+
+
+# ---------------------------------------------------------------------------
+# Armory: گان‌ها، اتچمنت‌ها و لوداوت بازیکن‌ها (بازسازی ۱.۰ — تسک ۶۰)
+# ---------------------------------------------------------------------------
+
+
+class GunCategory(str, enum.Enum):
+    rifle = "rifle"
+    smg = "smg"
+    sniper = "sniper"
+    shotgun = "shotgun"
+    pistol = "pistol"
+
+
+class AttachmentSlot(str, enum.Enum):
+    optic = "optic"  # دوربین/رددات
+    barrel = "barrel"  # سرلوله: سایلنسر/فلش‌هایدر
+    grip = "grip"  # گریپ/بایپاد
+    magazine = "magazine"  # خشاب
+    stock = "stock"  # استاک/قنداق
+    tactical = "tactical"  # لیزر/چراغ
+    sling = "sling"  # بند
+
+
+gun_attachment_compat = Table(
+    "gun_attachment_compat",
+    Base.metadata,
+    Column("gun_id", ForeignKey("guns.id"), primary_key=True),
+    Column("attachment_id", ForeignKey("attachments.id"), primary_key=True),
+)
+
+
+class Gun(Base):
+    __tablename__ = "guns"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    slug: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    brand: Mapped[str] = mapped_column(String(100), default="")
+    category: Mapped[GunCategory] = mapped_column(Enum(GunCategory), default=GunCategory.rifle)
+    power_source: Mapped[str] = mapped_column(String(30), default="aeg")  # aeg / gas / spring / hpa
+    fps: Mapped[int] = mapped_column(Integer, default=0)
+    weight_grams: Mapped[int] = mapped_column(Integer, default=0)
+    length_mm: Mapped[int] = mapped_column(Integer, default=0)
+    magazine_capacity: Mapped[int] = mapped_column(Integer, default=0)
+    description: Mapped[str] = mapped_column(Text, default="")
+    price_per_session: Mapped[int] = mapped_column(Integer, default=0)  # Toman
+    stock: Mapped[int] = mapped_column(Integer, default=0)
+    photos: Mapped[list] = mapped_column(JSON, default=list)  # ["/uploads/guns/m4a1-profile.webp", ...]
+    stats: Mapped[dict] = mapped_column(JSON, default=dict)  # {"accuracy": 70, "range": 60, "fire_rate": 80, "mobility": 65}
+    is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    attachments: Mapped[list["Attachment"]] = relationship(
+        secondary=gun_attachment_compat, back_populates="guns"
+    )
+
+
+class Attachment(Base):
+    __tablename__ = "attachments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    slug: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    slot: Mapped[AttachmentSlot] = mapped_column(Enum(AttachmentSlot))
+    brand: Mapped[str] = mapped_column(String(100), default="")
+    description: Mapped[str] = mapped_column(Text, default="")
+    price_per_session: Mapped[int] = mapped_column(Integer, default=0)  # Toman
+    stock: Mapped[int] = mapped_column(Integer, default=0)
+    photo: Mapped[str] = mapped_column(String(500), default="")
+    stat_modifiers: Mapped[dict] = mapped_column(JSON, default=dict)  # {"accuracy": 10, "mobility": -5}
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    guns: Mapped[list[Gun]] = relationship(secondary=gun_attachment_compat, back_populates="attachments")
+
+
+class Loadout(Base):
+    __tablename__ = "loadouts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    gun_id: Mapped[int] = mapped_column(ForeignKey("guns.id"))
+    name: Mapped[str] = mapped_column(String(255), default="لوداوت من")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship()
+    gun: Mapped[Gun] = relationship()
+    items: Mapped[list["LoadoutItem"]] = relationship(back_populates="loadout", cascade="all, delete-orphan")
+
+
+class LoadoutItem(Base):
+    __tablename__ = "loadout_items"
+    __table_args__ = (UniqueConstraint("loadout_id", "attachment_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    loadout_id: Mapped[int] = mapped_column(ForeignKey("loadouts.id"))
+    attachment_id: Mapped[int] = mapped_column(ForeignKey("attachments.id"))
+
+    loadout: Mapped[Loadout] = relationship(back_populates="items")
+    attachment: Mapped[Attachment] = relationship()
