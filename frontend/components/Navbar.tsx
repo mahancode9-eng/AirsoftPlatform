@@ -6,6 +6,7 @@ import { api, getToken, clearToken, User } from "@/lib/api"
 
 const links = [
   { href: "/", label: "خانه" },
+  { href: "/armory", label: "اسلحه‌خانه" },
   { href: "/fields", label: "زمین‌ها" },
   { href: "/booking", label: "رزرو بازی" },
   { href: "/events", label: "رویدادها" },
