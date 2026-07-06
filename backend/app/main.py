@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
-from .routers import admin, auth, bookings, catalog, events, leagues, payments, shop, uploads
+from .routers import admin, armory, auth, bookings, catalog, events, leagues, payments, shop, uploads
 from .seed import init_db
 
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +32,7 @@ app.add_middleware(
 api_prefix = "/api"
 app.include_router(auth.router, prefix=api_prefix)
 app.include_router(catalog.router, prefix=api_prefix)
+app.include_router(armory.router, prefix=api_prefix)
 app.include_router(bookings.router, prefix=api_prefix)
 app.include_router(events.router, prefix=api_prefix)
 app.include_router(leagues.router, prefix=api_prefix)
