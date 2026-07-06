@@ -6,29 +6,243 @@
 
 html {
   direction: rtl;
+  scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-soft text-ink font-sans;
+  @apply bg-night text-fog font-sans;
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(92, 112, 66, 0.18), transparent),
+    linear-gradient(rgba(158, 240, 26, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(158, 240, 26, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 44px 44px, 44px 44px;
+  background-attachment: fixed;
+}
+
+/* افکت اسکن‌لاین سراسری (امضای بصری برند) */
+body::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.14) 0px,
+    rgba(0, 0, 0, 0.14) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.22;
+}
+
+::selection {
+  background: #ff7a1a;
+  color: #0c100a;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0c100a;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a3323;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5c7042;
 }
 
 @layer components {
+  .clip-chamfer {
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  .clip-chamfer-sm {
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-army px-5 py-2.5 text-white transition hover:bg-armydark disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 bg-blaze px-6 py-3 font-bold text-night transition-all duration-200 hover:bg-neon hover:shadow-neon disabled:cursor-not-allowed disabled:opacity-50;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-5 py-2.5 text-ink transition hover:border-army;
+    @apply inline-flex items-center justify-center gap-2 border border-olive bg-panel/60 px-6 py-3 text-fog transition-all duration-200 hover:border-blaze hover:text-blaze;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   .card {
-    @apply rounded-xl border border-line bg-white p-5;
+    @apply relative border border-line bg-panel p-5 transition-all duration-200;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  .card:hover {
+    @apply border-olive bg-panel2;
   }
   .input {
-    @apply w-full rounded-lg border border-line bg-white px-3 py-2.5 outline-none transition focus:border-army;
+    @apply w-full border border-line bg-panel px-3 py-2.5 text-fog outline-none transition placeholder:text-muted/60 focus:border-blaze;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   .label {
     @apply mb-1.5 block text-sm text-muted;
   }
   .badge {
-    @apply inline-block rounded-full px-3 py-1 text-xs;
+    @apply inline-block px-3 py-1 text-xs;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+
+  /* براکت‌های HUD دور عنصر */
+  .hud-frame {
+    position: relative;
+  }
+  .hud-frame::before,
+  .hud-frame::after {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 122, 26, 0.8);
+  }
+  .hud-frame::before {
+    top: -2px;
+    right: -2px;
+    border-left: none;
+    border-bottom: none;
+  }
+  .hud-frame::after {
+    bottom: -2px;
+    left: -2px;
+    border-right: none;
+    border-top: none;
+  }
+
+  /* نشانگر crosshair هنگام hover روی کارت‌ها */
+  .crosshair-hover {
+    position: relative;
+    overflow: hidden;
+  }
+  .crosshair-hover::before {
+    content: "+";
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    z-index: 10;
+    font-size: 18px;
+    line-height: 1;
+    color: #ff7a1a;
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+    transition: all 0.25s ease;
+  }
+  .crosshair-hover:hover::before {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+
+  .text-glow-neon {
+    text-shadow: 0 0 12px rgba(158, 240, 26, 0.6);
+  }
+  .text-glow-blaze {
+    text-shadow: 0 0 14px rgba(255, 122, 26, 0.55);
+  }
+
+  /* خط تزئینی عنوان سکشن */
+  .section-tick {
+    @apply relative pr-4;
+  }
+  .section-tick::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 70%;
+    background: #ff7a1a;
+    clip-path: polygon(0 0, 100% 15%, 100% 100%, 0 85%);
+  }
+
+  /* نوار خطر (هشدار) */
+  .hazard-stripes {
+    background: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 122, 26, 0.8) 0px,
+      rgba(255, 122, 26, 0.8) 12px,
+      transparent 12px,
+      transparent 24px
+    );
+  }
+}
+
+/* انیمیشن‌ها */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes radar-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-radar {
+  animation: radar-sweep 2.4s linear infinite;
+}
+
+@keyframes flicker {
+  0%,
+  97%,
+  100% {
+    opacity: 1;
+  }
+  98% {
+    opacity: 0.6;
+  }
+  99% {
+    opacity: 0.9;
+  }
+}
+.animate-flicker {
+  animation: flicker 4s linear infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(158, 240, 26, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(158, 240, 26, 0);
+  }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.8s ease-out infinite;
+}
+
+/* سازگاری با صفحات قدیمی: سطح‌های سفید → پنل تیره (تا مهاجرت کامل در تسک ۵۷) */
+.bg-white {
+  background-color: #141a0f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after {
+    display: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
